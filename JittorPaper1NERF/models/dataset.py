@@ -1,4 +1,4 @@
-from numpy.core.fromnumeric import squeeze
+# from numpy.core.fromnumeric import squeeze
 import jittor
 from jittor import nn as jnn
 import cv2 as cv
@@ -10,6 +10,7 @@ from scipy.spatial.transform import Slerp
 import json
 
 np.random.seed(0)
+jittor.flags.use_cuda = 0
 
 
 # This function is borrowed from IDR: https://github.com/lioryariv/idr
