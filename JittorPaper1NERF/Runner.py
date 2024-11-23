@@ -14,7 +14,6 @@ from pyhocon import ConfigFactory  # 转换格式
 # TODO:找不到对应模块
 from torch.utils.tensorboard import SummaryWriter
 
-# TODO:Finish models
 from models.dataset import Dataset
 from models.fields import RenderingNetwork, SDFNetwork, SingleVarianceNetwork, NeRF, Pts_Bias
 from models.renderer import NeuSRenderer
@@ -385,7 +384,6 @@ if __name__ == '__main__':
     parser.add_argument("--seed", type=int, default=2022)
     args = parser.parse_args()
 
-    # TODO: 将cpu的代码切换
     jittor.flags.use_cuda = 1
 
     # keep same seed

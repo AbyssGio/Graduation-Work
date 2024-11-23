@@ -40,7 +40,6 @@ def sample_pdf(bins, weights, n_samples, det=False):
     # This implementation is from NeRF
     # Get pdf
     weights = weights + 1e-5  # prevent nans
-    # TODO: 浮点数？
     pdf = jittor.array(weights) / jittor.sum(weights, -1, keepdims=True)
     cdf = jittor.cumsum(pdf, -1)
     cdf = jittor.concat([jittor.zeros_like(cdf[..., :1]), cdf], -1)
@@ -119,7 +118,6 @@ class NeuSRenderer:
         dirs = dirs.reshape(-1, 3)
 
         density, sampled_color = nerf(pts, dirs)
-        # TODO:浮点数？
         alpha = jittor.array(1.0) - jittor.exp(-jnn.softplus(density.reshape(batch_size, n_samples)) * dists)
         alpha = alpha.reshape(batch_size, n_samples)
         weights = alpha * jittor.cumprod(jittor.concat([jittor.ones([batch_size, 1]), 1. - alpha + 1e-7], -1), -1)[:,
@@ -247,7 +245,6 @@ class NeuSRenderer:
         next_cdf = jittor.sigmoid(estimated_next_sdf * inv_s)
         p = prev_cdf - next_cdf
         c = prev_cdf
-        # TODO: 浮点数？
         alpha = ((p + 1e-5) / (c + jittor.array(1e-5))).reshape(batch_size, n_samples).clip(0.0, 1.0)
 
         ptsn = pts.reshape(batch_size, n_samples, 3)

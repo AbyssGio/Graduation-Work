@@ -36,12 +36,11 @@ def load_K_Rt_from_P(filename, P=None):
     intrinsics = np.eye(4)
     intrinsics[:3, :3] = K
 
-    # TODO:生成4x4的单精度浮点数单位矩阵，然后做一些看不懂的变换（？？？）
+    # 生成4x4的单精度浮点数单位矩阵，然后做一些看不懂的变换（？？？）
     pose = np.eye(4, dtype=np.float32)
     pose[:3, :3] = R.transpose()
     pose[:3, 3] = (t[:3] / t[3])[:, 0]
 
-    # TODO：好像是返回相机内部参数和相机的角度方向之类？？总之先弄清楚nerf算法
     return intrinsics, pose
 
 
