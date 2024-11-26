@@ -6,7 +6,7 @@ import numpy as np
 from embedder import get_embedder
 
 np.random.seed(0)
-jittor.flags.use_cuda = 0
+jittor.flags.use_cuda = 1
 
 
 # 这是一种用来拟合物体表面场函数的神经网络，这个场用一个距离矩阵来表示平面内点到物体表面的距离
@@ -123,7 +123,7 @@ class SDFNetwork(jnn.Module):
         # d_output = jittor.ones_like(y)
         # d_output = torch.ones_like(y, requires_grad=False, device=y.device)
         # TODO: 有些出入,文档里有retain_graph参数，这里却没有
-        gradients = jittor.grad(y, x)
+        gradients = jittor.grad(y, x, retain_graph=True)
         '''
         gradients = torch.autograd.grad(
             outputs=y,
@@ -141,7 +141,7 @@ class SDFNetwork(jnn.Module):
         # d_output = jittor.ones_like(y)
         # d_output = torch.ones_like(y, requires_grad=False, device=y.device)
         # TODO: 有些出入,文档里有retain_graph参数，这里却没有
-        gradients = jittor.grad(y, x)
+        gradients = jittor.grad(y, x, retain_graph=True)
         '''
         gradients = torch.autograd.grad(
             outputs=y,

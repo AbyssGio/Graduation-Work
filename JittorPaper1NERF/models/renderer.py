@@ -4,7 +4,7 @@ from jittor import nn as jnn
 import numpy as np
 import mcubes
 
-jittor.flags.use_cuda = 0
+jittor.flags.use_cuda = 1
 
 
 def extract_fields(bound_min, bound_max, resolution, query_func):
@@ -62,10 +62,8 @@ def sample_pdf(bins, weights, n_samples, det=False):
     bins_g = jittor.gather(bins.unsqueeze(1).expand(matched_shape), 2, inds_g)
 
     denom = (cdf_g[..., 1] - cdf_g[..., 0])
-    # TODO：可以吗
-    # denom = jittor.Var.where(denom < 1e-5, jittor.ones_like(denom), denom)
-    if denom < 1e-5:
-        denom = jittor.ones_like(denom)
+    # 跟文档上有些出入啊，貌似调用的不是一个函数啊
+    denom = jittor.where(denom < 1e-5, jittor.ones_like(denom), denom)
     t = (u - cdf_g[..., 0]) / denom
     samples = bins_g[..., 0] + t * (bins_g[..., 1] - bins_g[..., 0])
 
@@ -351,7 +349,6 @@ class NeuSRenderer:
             'mid_z_vals': mid_z_vals,
             'weights': weights,
             'weightsm': weightsm,
-            # TODO: 可以么？
             'cdf': c.reshape(z_vals.shape),
             # 'cdf': c.reshape(batch_size, n_samples),
             'gradient_error': gradient_error,

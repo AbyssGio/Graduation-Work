@@ -1,10 +1,11 @@
 import jittor
 from jittor import nn as jnn
+from JittorPaper1NERF.outer_jittor import outerjittor as oj
 
 # Positional encoding embedding. Code was taken from https://github.com/bmild/nerf.
 import math
 
-jittor.flags.use_cuda = 0
+jittor.flags.use_cuda = 1
 
 
 class Embedder:
@@ -77,8 +78,7 @@ class IntegratedPositionEncoder(jnn.Module):
             encoded: [N_pts, 3], encoded variables.
         """
         if not diag:
-            # TODO:两种方案 找到对应函数 或用jittor.misc.diag函数编写新的函数 但要先弄清维数的偏移
-            x_cov = jittor.diagonal(x_cov, dim1=-2, dim2=-1)
+            x_cov = oj.diagonal(x_cov)
 
         y = x[..., None, :] * self.freq_bands[:, None]  # [N_pts, 1, 3] x [N_freqs, 1] -> [N_pts, N_freqs, 3]
         y = y.reshape(x.shape[:-1] + (-1,))  # [N_pts, N_freqs * 3]

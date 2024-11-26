@@ -4,6 +4,7 @@ import logging
 import argparse
 import numpy as np
 import cv2 as cv
+import torch
 import trimesh
 import jittor
 import jittor.nn as jnn
@@ -11,14 +12,13 @@ from shutil import copyfile
 # from icecream import ic
 from tqdm import tqdm  # 进度条显示
 from pyhocon import ConfigFactory  # 转换格式
-# TODO:找不到对应模块
-from torch.utils.tensorboard import SummaryWriter
+from outer_jittor import outerjittor as oj
 
 from models.dataset import Dataset
 from models.fields import RenderingNetwork, SDFNetwork, SingleVarianceNetwork, NeRF, Pts_Bias
 from models.renderer import NeuSRenderer
 
-jittor.flags.use_cuda = 0
+jittor.flags.use_cuda = 1
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
 
@@ -106,8 +106,6 @@ class Runner:
             self.file_backup()
 
     def train(self):
-        # TODO：换个jittor的记录
-        self.writer = SummaryWriter(log_dir=os.path.join(self.base_exp_dir, 'logs'))
         self.update_learning_rate()
         res_step = self.end_iter - self.iter_step
         image_perm = self.get_image_perm()
@@ -142,15 +140,15 @@ class Runner:
             # Loss
             color_error = (color_fine - true_rgb) * mask
             color_fine_loss = jnn.l1_loss(color_error, jittor.zeros_like(color_error)).sum() / mask_sum
-            # TODO:log10??? 换底公式但是有很大的精度损失
+            # 换底公式但是有很大的精度损失
             psnr = jittor.array(20.0) * jittor.log(
                 1.0 / (((color_fine - true_rgb) ** 2 * mask).sum() / (mask_sum * 3.0)).sqrt()) / jittor.log(
                 jittor.array(10))
 
             eikonal_loss = gradient_error
 
-            # TODO:jittor里似乎没有计算不带logit的二元交叉熵损失??
-            mask_loss = jittor.binary_cross_entropy(weight_sum.clip(1e-3, 1.0 - 1e-3), mask)
+            # TODO: jittor里似乎没有计算不带logit的二元交叉熵损失??
+            mask_loss = torch.binary_cross_entropy(weight_sum.clip(1e-3, 1.0 - 1e-3), mask)
 
             loss = color_fine_loss + \
                    eikonal_loss * self.igr_weight + \
@@ -367,9 +365,6 @@ class Runner:
 
 if __name__ == '__main__':
     print('Hello Wooden')
-
-    # TODO:设置GPU32位浮点数 可以用jittor.var设置 不过一样么？？
-    # torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)

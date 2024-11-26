@@ -1,7 +1,8 @@
+import jittor
 import jittor as jt
 from jittor import nn
 
-jt.flags.use_cuda = 0
+jt.flags.use_cuda = 1
 
 
 def _weight_norm(v, g, dim):
@@ -73,3 +74,17 @@ def remove_weight_norm(module, name: str = 'weight'):
                      .format(name, module))
 
 
+def binary_cross_entropy(inp, target, weight=None, size_average=None, reduce=None, reduction='mean'):
+
+    return
+
+
+def diagonal(Mat):
+    ret = []
+    for i in range(0, Mat.shape[0]):
+        print(jittor.diag(Mat[i]))
+        tem = jittor.diag(Mat[i])
+        ret.append(tem)
+
+    ret = jittor.array(ret)
+    return ret

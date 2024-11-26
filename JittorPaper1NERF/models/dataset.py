@@ -10,11 +10,10 @@ from scipy.spatial.transform import Slerp
 import json
 
 np.random.seed(0)
-jittor.flags.use_cuda = 0
+jittor.flags.use_cuda = 1
 
 
 # This function is borrowed from IDR: https://github.com/lioryariv/idr
-# TODO:所以这个函数是干嘛的？？
 def load_K_Rt_from_P(filename, P=None):
     # 这里可能是想从文件加载P，但这里已经有P了
     if P is None:
@@ -31,7 +30,6 @@ def load_K_Rt_from_P(filename, P=None):
     R = out[1]
     t = out[2]
 
-    # TODO：所以为什么不能运算啊喂！我opencv有问题？
     K = K / K[2, 2]
     intrinsics = np.eye(4)
     intrinsics[:3, :3] = K
@@ -84,7 +82,6 @@ class Dataset:
             # K中是一个4x4的单精度浮点数矩阵
             K = np.array(dict_all[img_name]['K']).reshape(4, 4).astype(np.float32)
             W2C = np.array(dict_all[img_name]['W2C']).reshape(4, 4).astype(np.float32)
-            # TODO:？？？ 用来处理摄像头的？
             P = K @ W2C
             P = P[:3, :4]
             intrinsics, pose = load_K_Rt_from_P(None, P)
