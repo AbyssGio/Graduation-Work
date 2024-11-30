@@ -4,7 +4,6 @@ import logging
 import argparse
 import numpy as np
 import cv2 as cv
-import torch
 import trimesh
 import jittor
 import jittor.nn as jnn
@@ -12,7 +11,7 @@ from shutil import copyfile
 # from icecream import ic
 from tqdm import tqdm  # 进度条显示
 from pyhocon import ConfigFactory  # 转换格式
-from outer_jittor import outerjittor as oj
+# from outer_jittor import outerjittor as oj
 
 from models.dataset import Dataset
 from models.fields import RenderingNetwork, SDFNetwork, SingleVarianceNetwork, NeRF, Pts_Bias
@@ -147,8 +146,7 @@ class Runner:
 
             eikonal_loss = gradient_error
 
-            # TODO: jittor里似乎没有计算不带logit的二元交叉熵损失??
-            mask_loss = torch.binary_cross_entropy(weight_sum.clip(1e-3, 1.0 - 1e-3), mask)
+            mask_loss = jittor.binary_cross_entropy_with_logits(weight_sum.clip(1e-3, 1.0 - 1e-3), mask)
 
             loss = color_fine_loss + \
                    eikonal_loss * self.igr_weight + \
@@ -370,11 +368,11 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--conf', type=str, default='./confs/base.conf')
+    parser.add_argument('--conf', type=str, default='./confs/womask.conf')
     parser.add_argument('--mode', type=str, default='train')
-    parser.add_argument('--mcube_threshold', type=float, default=0.0)
+    parser.add_argument('--mcube_threshold', type=float, default=0.01)
     parser.add_argument('--is_continue', default=False, action="store_true")
-    parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument('--gpu', type=int, default=1)
     parser.add_argument('--case', type=str, default='')
     parser.add_argument("--seed", type=int, default=2022)
     args = parser.parse_args()

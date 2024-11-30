@@ -74,11 +74,6 @@ def remove_weight_norm(module, name: str = 'weight'):
                      .format(name, module))
 
 
-def binary_cross_entropy(inp, target, weight=None, size_average=None, reduce=None, reduction='mean'):
-
-    return
-
-
 def diagonal(Mat):
     ret = []
     for i in range(0, Mat.shape[0]):
