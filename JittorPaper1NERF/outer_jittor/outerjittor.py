@@ -83,3 +83,20 @@ def diagonal(Mat):
 
     ret = jittor.array(ret)
     return ret
+
+
+def Osqueeze(x):
+    shape = list(x.shape)
+    newshape = [s for s in shape if s > 1]
+    return x.reshape(newshape)
+
+
+'''
+def mm(x, min, max):
+    for v in x:
+        if v < min:
+            v = min
+        if v > max:
+            v = max
+    return x
+'''
