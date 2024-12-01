@@ -146,18 +146,40 @@ class Runner:
 
             eikonal_loss = gradient_error
 
-            mask_loss = jittor.binary_cross_entropy_with_logits(weight_sum.clip(1e-3, 1.0 - 1e-3), mask)
+            mask_loss = jittor.nn.binary_cross_entropy_with_logits(jittor.array(weight_sum.numpy().clip(1e-3, 1.0 - 1e-3)), mask)
 
             loss = color_fine_loss + \
                    eikonal_loss * self.igr_weight + \
                    mask_loss * self.mask_weight
 
             self.optimizer.zero_grad()
-            loss.backward()
+            self.optimizer.backward(loss)
+            '''
+RuntimeError: [f 1202 00:19:48.094000 48 nn.py:2158]  The `backward` variable interface doesn't exist in Jittor.
+please use `optimizer.backward(loss)` or 
+`optimizer.step(loss)` instead.
+For example, if your code looks like this::
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+It can be changed to this::
+
+    optimizer.zero_grad()
+    optimizer.backward(loss)
+    optimizer.step()
+
+Or more concise::
+
+    optimizer.step(loss)
+
+The step function will automatically zero grad and backward.
+            '''
             self.optimizer.step()
 
             self.iter_step += 1
-
+            '''
             self.writer.add_scalar('Loss/loss', loss, self.iter_step)
             self.writer.add_scalar('Loss/color_loss', color_fine_loss, self.iter_step)
             self.writer.add_scalar('Loss/eikonal_loss', eikonal_loss, self.iter_step)
@@ -165,6 +187,7 @@ class Runner:
             self.writer.add_scalar('Statistics/cdf', (cdf_fine[:, :1] * mask).sum() / mask_sum, self.iter_step)
             self.writer.add_scalar('Statistics/weight_max', (weight_max * mask).sum() / mask_sum, self.iter_step)
             self.writer.add_scalar('Statistics/psnr', psnr, self.iter_step)
+            '''
 
             if self.iter_step % self.report_freq == 0:
                 print(self.base_exp_dir)

@@ -102,6 +102,25 @@ class SDFNetwork(jnn.Module):
         # return torch.cat([x[:, :1] / self.scale, x[:, 1:2] / self.scale, x[:, 2:]], dim=-1)
         return jittor.concat([x[:, :1] / self.scale, x[:, 1:]], dim=-1)
 
+    def execute(self, inputs):
+        inputs = inputs * self.scale
+        if self.embed_fn_fine is not None:
+            inputs = self.embed_fn_fine(inputs)
+
+        x = inputs
+        for l in range(0, self.num_layers - 1):
+            lin = getattr(self, "lin" + str(l))
+
+            if l in self.skip_in:
+                x = jittor.concat([x, inputs], 1) / np.sqrt(2)
+
+            x = lin(x)
+
+            if l < self.num_layers - 2:
+                x = self.activation(x)
+        # return torch.cat([x[:, :1] / self.scale, x[:, 1:2] / self.scale, x[:, 2:]], dim=-1)
+        return jittor.concat([x[:, :1] / self.scale, x[:, 1:]], dim=-1)
+
     def sdf(self, x):
         return self.forward(x)[:, :1]
 
@@ -113,7 +132,7 @@ class SDFNetwork(jnn.Module):
 
     # 定义求梯度函数
     def gradient(self, x):
-        x.requires_grad_(True)
+        # x.requires_grad_(True)
         y = self.sdf(x)
         # d_output = jittor.ones_like(y)
         # d_output = torch.ones_like(y, requires_grad=False, device=y.device)
@@ -213,6 +232,33 @@ class RenderingNetwork(jnn.Module):
             x = jittor.sigmoid(x)
         return x
 
+    def execute(self, points, normals, view_dirs, feature_vectors):
+        if self.embedview_fn is not None:
+            view_dirs = self.embedview_fn(view_dirs)
+
+        rendering_input = None
+
+        if self.mode == 'idr':
+            rendering_input = jittor.concat([points, view_dirs, normals, feature_vectors], dim=-1)
+        elif self.mode == 'no_view_dir':
+            rendering_input = jittor.concat([points, normals, feature_vectors], dim=-1)
+        elif self.mode == 'no_normal':
+            rendering_input = jittor.concat([points, view_dirs, feature_vectors], dim=-1)
+
+        x = rendering_input
+
+        for l in range(0, self.num_layers - 1):
+            lin = getattr(self, "lin" + str(l))
+
+            x = lin(x)
+
+            if l < self.num_layers - 2:
+                x = self.relu(x)
+
+        if self.squeeze_out:
+            x = jittor.sigmoid(x)
+        return x
+
 
 # pts_fea是input_ch维输入，三个全连接层，每层256维输入，1维输出的网络架构
 # dm是128维输入，1维输出，nm是128维输入，3维输出
@@ -222,23 +268,31 @@ class Pts_Bias(jnn.Module):
         embed_fn, input_ch = get_embedder(multires, input_dims=d_in)
         self.embed_fn_fine = embed_fn
         self.pts_fea = jnn.Sequential(jnn.Linear(input_ch, d_hidden),
-                                      jnn.ReLU(inplace=True),
+                                      jnn.ReLU(),
                                       jnn.Linear(d_hidden, d_hidden),
-                                      jnn.ReLU(inplace=True),
+                                      jnn.ReLU(),
                                       jnn.Linear(d_hidden, 1),
-                                      jnn.ReLU(inplace=True))
+                                      jnn.ReLU())
 
         self.dm = jnn.Sequential(jnn.Linear(128, d_hidden),
-                                 jnn.ReLU(inplace=True),
+                                 jnn.ReLU(),
                                  jnn.Linear(d_hidden, 1),
                                  jnn.Sigmoid())
 
         self.nm = jnn.Sequential(jnn.Linear(128, d_hidden),
-                                 jnn.ReLU(inplace=True),
+                                 jnn.ReLU(),
                                  jnn.Linear(d_hidden, 3),
                                  jnn.Tanh())
 
     def forward(self, x):
+        x = self.embed_fn_fine(x)
+        pts_bias = self.pts_fea(x)
+        pts_fea = pts_bias.squeeze(-1)
+        dm = self.dm(pts_fea)
+        nm = self.nm(pts_fea)
+        return dm, nm, pts_fea
+
+    def execute(self, x):
         x = self.embed_fn_fine(x)
         pts_bias = self.pts_fea(x)
         pts_fea = pts_bias.squeeze(-1)
@@ -327,6 +381,33 @@ class NeRF(jnn.Module):
         else:
             assert False
 
+    def execute(self, input_pts, input_views):
+        if self.embed_fn is not None:
+            input_pts = self.embed_fn(input_pts)
+        if self.embed_fn_view is not None:
+            input_views = self.embed_fn_view(input_views)
+
+        h = input_pts
+        for i, l in enumerate(self.pts_linears):
+            h = self.pts_linears[i](h)
+            h = jnn.relu(h)
+            if i in self.skips:
+                h = jittor.concat([input_pts, h], -1)
+
+        if self.use_viewdirs:
+            alpha = self.alpha_linear(h)
+            feature = self.feature_linear(h)
+            h = jittor.concat([feature, input_views], -1)
+
+            for i, l in enumerate(self.views_linears):
+                h = self.views_linears[i](h)
+                h = jnn.relu(h)
+
+            rgb = self.rgb_linear(h)
+            return alpha, rgb
+        else:
+            assert False
+
 
 class SingleVarianceNetwork(jnn.Module):
     def __init__(self, init_val):
@@ -336,4 +417,7 @@ class SingleVarianceNetwork(jnn.Module):
         # self.register_parameter('variance', jnn.Parameter(jittor.float32(init_val)))
 
     def forward(self, x):
+        return jittor.ones([len(x), 1]) * jittor.exp(self.variance * jittor.array(10.0))
+
+    def execute(self, x):
         return jittor.ones([len(x), 1]) * jittor.exp(self.variance * jittor.array(10.0))

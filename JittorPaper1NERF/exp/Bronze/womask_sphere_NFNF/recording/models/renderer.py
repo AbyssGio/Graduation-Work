@@ -230,12 +230,12 @@ class NeuSRenderer:
         sdf_nn_output = sdf_network(pts)
         sdf = sdf_nn_output[:, :1]
         feature_vector = sdf_nn_output[:, 1:]
-        gradients = sdf_network.gradient(pts).squeeze()
+        gradients = oj.Osqueeze(sdf_network.gradient(pts))
 
         inv_s = deviation_network(jittor.array(jittor.zeros([1, 3]))[:, :1].numpy().clip(1e-6, 1e6))  # Single parameter
         inv_s = inv_s.expand(batch_size * n_samples, 1)
 
-        true_cos = (dirs * gradients).sum(-1, keepdim=True)
+        true_cos = jittor.sum(dirs * gradients, dim=-1, keepdims=True)
         # "cos_anneal_ratio" grows from 0 to 1 in the beginning training iterations. The anneal strategy below makes
         # the cos value "not dead" at the beginning training iterations, for better convergence.
         iter_cos = -(jnn.relu(-true_cos * 0.5 + 0.5) * (1.0 - cos_anneal_ratio) +
@@ -247,7 +247,7 @@ class NeuSRenderer:
         next_cdf = jittor.sigmoid(estimated_next_sdf * inv_s)
         p = prev_cdf - next_cdf
         c = prev_cdf
-        alpha = ((p + 1e-5) / jittor.array((c + jittor.array(1e-5))).reshape(batch_size, n_samples).numpy().clip(0.0, 1.0))
+        alpha = jittor.array(((p + 1e-5) / (c + jittor.array(1e-5))).reshape(batch_size, n_samples).numpy().clip(0.0, 1.0))
 
         ptsn = pts.reshape(batch_size, n_samples, 3)
 
@@ -285,7 +285,7 @@ class NeuSRenderer:
 
         pts2 = pts - c_pts
         z_vals_p = z_vals_p0.expand(mid_z_vals.shape)
-        maskz = (mid_z_vals > z_vals_p).float().detach_()
+        maskz = (mid_z_vals > z_vals_p).float().detach()
         mid_z_vals2 = mid_z_vals * maskz
         mid_z_vals2_2 = mid_z_vals * (1. - maskz)
 
@@ -442,9 +442,9 @@ class NeuSRenderer:
         z_fine = ret_fine['zvals']
         weights = ret_fine['weights']
         weightsm = ret_fine['weightsm']
-        weights_sum = weights.sum(dim=-1, keepdim=True)
+        weights_sum = jittor.sum(weights, dim=-1, keepdims=True)
         gradients = ret_fine['gradients']
-        s_val = ret_fine['s_val'].reshape(batch_size, n_samples).mean(dim=-1, keepdim=True)
+        s_val = jittor.mean(ret_fine['s_val'].reshape(batch_size, n_samples), dim=-1, keepdims=True)
 
         return {
             'color_fine': color_fine,
@@ -455,7 +455,7 @@ class NeuSRenderer:
             'cdf_fine': ret_fine['cdf'],
             'sdf': ret_fine['sdf'],
             'weight_sum': weights_sum,
-            'weight_max': jittor.max(weights, dims_mask=-1, keepdims_mask=True),
+            'weight_max': jittor.max(weights, dim=-1, keepdims=True),
             'gradients': gradients,
             'weights': weights,
             'weightsm': weightsm,

@@ -48,7 +48,6 @@ class Dataset:
         super(Dataset, self).__init__()
         print('Load data: Begin')
 
-        jittor.flags.use_cuda = 1
         # self.device = torch.device('cuda')
 
         self.conf = conf
