@@ -298,13 +298,13 @@ The step function will automatically zero grad and backward.
                 return (key in render_out) and (render_out[key] is not None)
 
             if feasible('color_fine'):
-                out_rgb_fine.append(render_out['color_fine'].detach().cpu().numpy())
+                out_rgb_fine.append(render_out['color_fine'].detach().numpy())
             if feasible('gradients') and feasible('weights'):
                 n_samples = self.renderer.n_samples + self.renderer.n_importance
                 normals = render_out['gradients'] * render_out['weights'][:, :n_samples, None]
                 if feasible('inside_sphere'):
                     normals = normals * render_out['inside_sphere'][..., None]
-                normals = normals.sum(dim=1).detach().cpu().numpy()
+                normals = normals.sum(dim=1).detach().numpy()
                 out_normal_fine.append(normals)
             del render_out
 
@@ -315,7 +315,7 @@ The step function will automatically zero grad and backward.
         normal_img = None
         if len(out_normal_fine) > 0:
             normal_img = np.concatenate(out_normal_fine, axis=0)
-            rot = np.linalg.inv(self.dataset.pose_all[idx, :3, :3].detach().cpu().numpy())
+            rot = np.linalg.inv(self.dataset.pose_all[idx, :3, :3].detach().numpy())
             normal_img = (np.matmul(rot[None, :, :], normal_img[:, :, None])
                           .reshape([H, W, 3, -1]) * 128 + 128).clip(0, 255)
 
@@ -356,7 +356,7 @@ The step function will automatically zero grad and backward.
                                               cos_anneal_ratio=self.get_cos_anneal_ratio(),
                                               background_rgb=background_rgb)
 
-            out_rgb_fine.append(render_out['color_fine'].detach().cpu().numpy())
+            out_rgb_fine.append(render_out['color_fine'].detach().numpy())
 
             del render_out
 

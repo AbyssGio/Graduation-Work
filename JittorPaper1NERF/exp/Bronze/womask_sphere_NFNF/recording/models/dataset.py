@@ -116,11 +116,14 @@ class Dataset:
         tx = jittor.linspace(0, self.W - 1, self.W // l)
         ty = jittor.linspace(0, self.H - 1, self.H // l)
         pixels_x, pixels_y = jittor.meshgrid(tx, ty)
-        p = jittor.stack([pixels_x, pixels_y, jittor.ones_like(pixels_y)], dim=-1)  # W, H, 3
+        p = oj.Osqueeze(jittor.stack([pixels_x, pixels_y, jittor.ones_like(pixels_y)], dim=-1))  # W, H, 3
+        # 这里jittor用cuda的函数好像有点问题，我就用cpu进行训练了，用cuda训练矩阵乘法会报错
+        jittor.flags.use_cuda = 0
         p = oj.Osqueeze(jittor.nn.matmul(self.intrinsics_all_inv[img_idx, None, None, :3, :3], p[:, :, :, None]))  # W, H, 3
         rays_v = p / jittor.norm(p, p=2, dim=-1, keepdim=True)  # W, H, 3
-        rays_v = oj.Osqueeze(jittor.nn.matmul(self.pose_all[img_idx, None, None, :3, :3], rays_v[:, :, :, None])) # W, H, 3
-        rays_o = self.pose_all[img_idx, None, None, :3, 3].expand(rays_v.shape)  # W, H, 3
+        rays_v = oj.Osqueeze(jittor.nn.matmul(self.pose_all[img_idx, None, None, :3, :3], rays_v[:, :, :, None]))  # W, H, 3
+        rays_o = oj.Osqueeze(self.pose_all[img_idx, None, None, :3, 3].expand(rays_v.shape))  # W, H, 3
+        jittor.flags.use_cuda = 1
         return rays_o.transpose(0, 1), rays_v.transpose(0, 1)
 
     def gen_random_rays_at(self, img_idx, batch_size):
