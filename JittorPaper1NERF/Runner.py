@@ -152,6 +152,8 @@ class Runner:
                    eikonal_loss * self.igr_weight + \
                    mask_loss * self.mask_weight
 
+            loss = jittor.array(loss)
+
             self.optimizer.zero_grad()
             self.optimizer.backward(loss)
             '''
