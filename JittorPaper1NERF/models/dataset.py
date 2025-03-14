@@ -1,5 +1,5 @@
 # from numpy.core.fromnumeric import squeeze
-import JittorPaper1NERF.outer_jittor.outerjittor as oj
+import outer_jittor.outerjittor as oj
 import jittor
 from jittor import nn as jnn
 import cv2 as cv

@@ -77,7 +77,6 @@ def remove_weight_norm(module, name: str = 'weight'):
 def diagonal(Mat):
     ret = []
     for i in range(0, Mat.shape[0]):
-        print(jittor.diag(Mat[i]))
         tem = jittor.diag(Mat[i])
         ret.append(tem)
 

@@ -2,7 +2,7 @@ import sys
 
 import jittor
 from jittor import nn as jnn
-import JittorPaper1NERF.outer_jittor.outerjittor as oj
+import outer_jittor.outerjittor as oj
 
 import numpy as np
 import mcubes

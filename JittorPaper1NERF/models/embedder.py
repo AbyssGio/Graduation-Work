@@ -1,6 +1,6 @@
 import jittor
 from jittor import nn as jnn
-from JittorPaper1NERF.outer_jittor import outerjittor as oj
+from outer_jittor import outerjittor as oj
 
 # Positional encoding embedding. Code was taken from https://github.com/bmild/nerf.
 import math

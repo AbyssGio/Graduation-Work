@@ -1,11 +1,11 @@
 import sys
 
 import jittor
-from JittorPaper1NERF.outer_jittor import outerjittor as oj
+from outer_jittor import outerjittor as oj
 from jittor import nn as jnn
 
 import numpy as np
-from JittorPaper1NERF.models.embedder import get_embedder
+from models.embedder import get_embedder
 
 np.random.seed(0)
 jittor.flags.use_cuda = 1
