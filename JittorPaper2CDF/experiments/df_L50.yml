@@ -1,0 +1,59 @@
+general:
+  log_dir: /home/user/Desktop/test2/logs
+  checkpoint_dir: /home/user/Desktop/test2/logs/checkpoints
+  model: DFNet
+  frame_h: 224
+  frame_w: 224
+  pretrained_weight:
+#  pretrained_weight: /home/user/Desktop/test2/logs/checkpoints/ckpt-best.pth
+  finetune: False
+  running_type: train
+  print_freq: 10
+
+# data settings
+dataset:
+  name: blenderglass
+  dataset_dir: /home/user/Desktop/dataset2
+  type: pic
+  data_aug:
+    depth_norm: True
+    rgb_aug: False
+  with_trajectory: True
+  depth_max: 20
+  depth_factor: 4000
+
+training:
+  train_batch_size: 8
+  valid_batch_size: 8
+  use_multi_gpu: False
+  epochs: 50
+  lr: 0.0002
+  num_workers: 8
+  decay_epochs: 30
+  decay_gamma: 0.5
+  save_epochs: 10
+
+model:
+  depth_plane_num: 20
+  refine_cost: False
+  pnet:
+    type: VPointNet
+    hidden_dim: 24
+    out_channels: 32
+    refine_times: 1
+
+  color:
+    type: PyramidPool
+    out_channels: 32
+
+  normal:
+    enable: False
+    refine: False
+
+
+loss:
+  type: [] # "consistency_loss" "cos_normal_loss"
+  weight: [] # 0.02
+
+metrics:
+  type: ["masked_depth_rmse", "masked_depth_mae", "masked_depth_rel", "depth_failing_105", "depth_failing_110", "depth_failing_125"]

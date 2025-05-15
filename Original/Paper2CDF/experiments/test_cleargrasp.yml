@@ -1,0 +1,53 @@
+general:
+  log_dir: /home/ctwo/VDCNet/logs
+  checkpoint_dir: /home/ctwo/VDCNet/logs/checkpoints
+  model: DFNet
+  frame_h: 240
+  frame_w: 320
+  pretrained_weight: /home/ctwo/VDCNet/pretrained/df_pt_sobel_loss.pth
+  finetune: False
+  running_type: test
+  print_freq: 10
+
+# data settings
+dataset:
+  name: cleargrasp
+  dataset_dir: /home/ctwo/cleargrasp_dataset
+  type: pic
+  data_aug:
+    depth_norm: True
+    rgb_aug: False
+
+training:
+  train_batch_size: 8
+  valid_batch_size: 16
+  use_multi_gpu: True
+  epochs: 50
+  lr: 0.0002
+  num_workers: 8
+  decay_epochs: 25
+  decay_gamma: 0.5
+  save_epochs: 10
+
+model:
+  depth_plane_num: 50
+  pnet:
+    type: VPointNet # VPointNet
+    hidden_dim: 32
+    out_channels: 32
+
+  color:
+    type: PyramidPool
+    out_channels: 32
+
+  normal:
+    input_dim:
+    refine: False
+
+
+loss:
+  type: ["sobel_normal_loss", "consistency_loss"]
+  weight: [0.2, 0.3]
+
+metrics:
+  type: ["masked_depth_rmse", "masked_depth_mae", "masked_depth_rel", "depth_failing_105", "depth_failing_110", "depth_failing_115"]

@@ -1,0 +1,17 @@
+config = configs/nerf-small/bouncingballs.py
+eval_lpips_alex = False
+eval_lpips_vgg = False
+eval_psnr = False
+eval_ssim = False
+extract_density = False
+extract_flow = False
+fre_test = 30000
+ft_path = 
+i_print = 100
+render_only = False
+render_test = False
+render_train = False
+render_video = False
+render_video_factor = 0
+seed = 0
+step_to_half = 19000

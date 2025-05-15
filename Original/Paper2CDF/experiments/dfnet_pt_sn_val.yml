@@ -1,0 +1,59 @@
+general:
+  log_dir: /home/ctwo/VDCNet/logs
+  checkpoint_dir: /home/ctwo/VDCNet/logs/checkpoints
+  model: DFNet
+  frame_h: 224
+  frame_w: 224
+#  pretrained_weight: /home/ctwo/VDCNet/pretrained/df_224x224.pth
+#  pretrained_weight: /home/ctwo/VDCNet/pretrained/df_sn_mask224x224.pth
+  pretrained_weight: /home/ctwo/VDCNet/logs/checkpoints/ckpt-best.pth
+  finetune: False
+  running_type: val
+  print_freq: 20
+
+# data settings
+dataset:
+  name: blenderglass
+  dataset_dir: /home/ctwo/blender_glass_data
+  type: pic
+  data_aug:
+    depth_norm: True
+    rgb_aug: False
+  with_trajectory: True
+  depth_max: 3
+  depth_factor: 4000
+
+training:
+  train_batch_size: 16
+  valid_batch_size: 16
+  use_multi_gpu: True
+  epochs: 40
+  lr: 0.0002
+  num_workers: 8
+  decay_epochs: 50
+  decay_gamma: 0.5
+  save_epochs: 10
+
+model:
+  depth_plane_num: 50
+  refine_cost: True
+  pnet:
+    type: VPointNet # VPointNet
+    hidden_dim: 24
+    out_channels: 32
+    refine_times: 1
+
+  color:
+    type: PyramidPool
+    out_channels: 32
+
+  normal:
+    enable: False
+    refine: False
+
+loss:
+  type: [] #
+  weight: [] # 0.4
+
+metrics:
+  type: ["masked_depth_rmse", "masked_depth_mae", "masked_depth_rel", "depth_failing_105", "depth_failing_110", "depth_failing_125"]
